@@ -27,29 +27,29 @@ Proyecto realizado con **FastAPI**, **MariaDB** y **Docker Compose**. Esta API p
 ---
 
 ## 🛠 Estructura del proyecto
-📁 JuegosMesa_API/
-│
+
+```text
+JuegosMesa_API/
 ├── app/
-│ ├── main.py # Entrypoint de la API
-│ ├── crud.py # Lógica CRUD
-│ ├── database.py # Configuración de conexión a MariaDB
-│ ├── models.py # Modelo SQLAlchemy
-│ └── schemas.py # Validación con Pydantic
-│
-├── Dockerfile # Imagen personalizada para FastAPI
-├── docker-compose.yml # Orquestación de servicios y red entre contenedores
-├── requirements.txt # Dependencias
-└── README.md # Este documento
+│   ├── main.py         # Entrypoint de la API
+│   ├── crud.py         # Lógica CRUD
+│   ├── database.py     # Configuración de conexión a MariaDB
+│   ├── models.py       # Modelo SQLAlchemy
+│   ├── schemas.py      # Validación con Pydantic
+├── Dockerfile          # Imagen personalizada para FastAPI
+├── docker-compose.yml  # Orquestación de servicios y red entre contenedores
+├── requirements.txt    # Dependencias
+├── README.md           # Este documento
+```
 
-  
-
-Además, `docker-compose.yml` crea y orquesta **dos contenedores**:
+El archivo `docker-compose.yml` crea y orquesta **dos contenedores**:
 
 - `juegosmesa_api`: contenedor que ejecuta la API desarrollada en FastAPI.
 - `juegos-db`: contenedor de base de datos MariaDB.
 
-Ambos contenedores están conectados en una **misma red personalizada** definida en `docker-compose.yml`, lo que les permite comunicarse directamente usando su nombre de servicio (`juegos-db`). Esto cumple con el requisito del enunciado de que ambos contenedores deben coexistir en la misma red y comunicarse por nombre.
-![image](https://github.com/user-attachments/assets/717802f6-737b-40a4-a11d-d17fb5ebd7a2)
+Ambos contenedores están conectados en una **misma red personalizada** definida en `docker-compose.yml`, lo que les permite comunicarse directamente usando su nombre de servicio (`juegos-db`).
+
+![alt text](image.png)
 
 ---
 
