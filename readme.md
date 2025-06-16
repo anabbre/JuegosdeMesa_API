@@ -48,7 +48,7 @@ Proyecto realizado con **FastAPI**, **MariaDB** y **Docker Compose**. Esta API p
 1. Clona el repositorio:
 
 ```
-git clone https://github.com/tuusuario/JuegosMesa_API.git
+git clone https://github.com/anabbre/JuegosdeMesa_API.git
 cd JuegosMesa_API
 ```
 
