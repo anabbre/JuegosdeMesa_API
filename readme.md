@@ -41,6 +41,8 @@ Proyecto realizado con **FastAPI**, **MariaDB** y **Docker Compose**. Esta API p
 ├── requirements.txt # Dependencias
 └── README.md # Este documento
 
+  
+
 Además, `docker-compose.yml` crea y orquesta **dos contenedores**:
 
 - `juegosmesa_api`: contenedor que ejecuta la API desarrollada en FastAPI.
