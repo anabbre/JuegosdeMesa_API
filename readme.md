@@ -73,6 +73,19 @@ SELECT * FROM juegos;
 
 ---
 
+> 🧩 **Nota sobre los contenedores y la red**
+>
+> Este proyecto levanta **dos contenedores** a través de Docker Compose:
+>
+> - `juegosmesa_api`: Contenedor de la API desarrollada con FastAPI.
+> - `juegos-db`: Contenedor de la base de datos MariaDB.
+>
+> Ambos están conectados en una **misma red personalizada** definida en el archivo `docker-compose.yml`, permitiendo que se comuniquen entre ellos por el **nombre del servicio** (`juegos-db`), cumpliendo así con el requisito del enunciado.
+
+![image](https://github.com/user-attachments/assets/ec08c163-2189-4701-9fa1-844b4da6005f)
+
+---
+
 ## 📂 Endpoints disponibles
 
 | Método | Ruta           | Descripción                     |
