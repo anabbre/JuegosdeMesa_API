@@ -1,0 +1,34 @@
+version: "3.8"
+
+services:
+  db:
+    image: mariadb:10.6
+    container_name: juegos-db
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: juegos
+    volumes:
+      - juegos-data:/var/lib/mysql
+    networks:
+      - juegos-net
+
+
+  api:
+    build: .
+    container_name: juegosmesa_api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - juegos-net
+    volumes:
+      - .:/app
+
+
+volumes:
+  juegos-data:
+
+networks:
+  juegos-net:
