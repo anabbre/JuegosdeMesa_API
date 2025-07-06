@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  api:
+    #hereda todo de base.api
+    volumes:
+      - ./docker/app:/app/app
+    #y expone el puerto en dev
+    ports:
+      - "8080:8080"

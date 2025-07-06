@@ -1,0 +1,11 @@
+# docker/.dockerignore
+
+# Código fuente
+__pycache__/
+*.pyc
+
+# Archivos de entorno (no es necesario en la imagen)
+.env
+
+# Otros (si se diera el caso)
+venv/

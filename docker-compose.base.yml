@@ -1,31 +1,29 @@
-version: "3.8"
+version: '3.8'
 
 services:
   db:
-    image: mariadb:10.6
+    image: mariadb:10.5
     container_name: juegos-db
     restart: always
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-      MYSQL_DATABASE: juegos
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     volumes:
       - juegos-data:/var/lib/mysql
     networks:
       - juegos-net
 
-
   api:
-    build: .
+    build:
+      context: ./docker       # <— apunta a la carpeta con tu Dockerfile
+      dockerfile: Dockerfile
     container_name: juegosmesa_api
-    ports:
-      - "8080:8080"
+    env_file:
+      - .env
     depends_on:
       - db
     networks:
       - juegos-net
-    volumes:
-      - .:/app
-
 
 volumes:
   juegos-data:

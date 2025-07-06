@@ -1,10 +1,12 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, Request
+import datetime
+import logging
 from sqlalchemy.orm import Session
 from app import crud, models, schemas, database
 from app.database import Base, engine
 import time
 from sqlalchemy.exc import OperationalError
-import logging
+
 
 #Configuración básica del logger
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -20,18 +22,33 @@ for attempt in range(1, MAX_RETRIES + 1):
         engine.connect()
         logger.info("✅ Conexión a la base de datos exitosa.")
         break
-    except OperationalError:
-        logger.warning(f"🕒 Intento {attempt}/{MAX_RETRIES} - Esperando conexión a la base de datos...")
+    except OperationalError as e:
+        logger.error(f"Error al conectar a la BD (intento {attempt}): {e}")
         time.sleep(RETRY_WAIT)
 else:
-    logger.error("❌ No se pudo conectar a la base de datos después de varios intentos.")
+    logger.critical("❌ No se pudo conectar a la base de datos después de varios intentos.")
     raise SystemExit(1)
 
 
 #Crear las tablas
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+app = FastAPI(
+    title="API CRUD Juegos de Mesa",
+    description="API RESTful para la gestión de un catálogo de juegos de mesa. Permite realizar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) de información detallada sobre juegos, incluyendo su nombre, año de lanzamiento, categoría y número de jugadores.",
+    version="2.0."
+)
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = datetime.datetime.utcnow()
+    logger.info(f"➡️ Petición: {request.method} {request.url}")
+    response = await call_next(request)
+    process_time = (datetime.datetime.utcnow() - start_time).total_seconds()
+    logger.info(f"⬅️ Respuesta: {response.status_code} {request.method} {request.url} "
+                f"in {process_time:.3f}s")
+    return response
+
 
 #Dependencia para obtener una sesión de base de datos
 def get_db():

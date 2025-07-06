@@ -1,0 +1,14 @@
+# Entornos virtuales
+venv/
+.env
+
+# Caché y bytecode
+__pycache__/
+*.pyc
+
+# Git
+.git
+.gitignore
+
+# VSCode
+.vscode/

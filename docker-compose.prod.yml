@@ -1,0 +1,18 @@
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  db:
+    #hereda base.db y solo añade el healthcheck
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    #hereda base.api, deshabilita los mounts (la imagen ya incluye el código)
+    volumes: []
+    #expone el puerto en prod también
+    ports:
+      - "8080:8080"
