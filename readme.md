@@ -158,7 +158,7 @@ Ambos contenedores comparten la red `juegos-net` (definida en `docker-compose.ba
   ```
   Se espera una respuesta con error de validación (422 Unprocessable Entity), indicando que los campos no pueden ser cadenas vacías o tener una longitud mínima.
 
-![alt text](img/6.jpg)
+![Error 422](img/6.jpg)
 ---
 
 
@@ -188,7 +188,7 @@ Para ver el catálogo completo, ejecutamos `GET /juegos` desde Swagger UI o cual
 ### 🩺 Health‐check de MariaDB
 En producción, el `healthcheck` de MariaDB nos indica el estado “healthy” al ejecutar `docker compose ps`:
 
-![docker-compose ps mostrando contenedor juegos-db healthy](img/7.jpg)
+![docker-compose ps mostrando contenedor juegos-db healthy](img/7.jpg)  
 
 ### 📂 Verificar registros desde MariaDB
 Podemos comprobar manualmente los registros accediendo al contenedor y consultando la tabla `juegos`:
