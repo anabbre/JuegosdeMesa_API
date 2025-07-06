@@ -158,43 +158,49 @@ Ambos contenedores comparten la red `juegos-net` (definida en `docker-compose.ba
   ```
   Se espera una respuesta con error de validación (422 Unprocessable Entity), indicando que los campos no pueden ser cadenas vacías o tener una longitud mínima.
 
-![alt text](img/6.jpg)
+![Error 422](img/6.jpg)
 ---
 
 
-## 📊 Ejemplos visuales 
+## 📊 Ejemplos Visuales
 
-#### 🔄 Arranque y logging de la API  
-Al iniciarse, la API muestra en los logs la conexión exitosa a MariaDB y el arranque de Uvicorn:
+### 🚀 Arranque y Logging de la API
+Al iniciar los servicios con Docker Compose, la API muestra en sus logs la confirmación de la conexión exitosa a la base de datos MariaDB y el inicio del servidor Uvicorn. Esto demuestra la robustez de la conexión y la disponibilidad de la API.
 
 ![Logs mostrando "✅ Conexión a la base de datos exitosa." y Uvicorn corriendo](img/3.jpg)
 
-### ✅ Crear juego desde Swagger UI
-A través de Swagger UI podemos enviar un JSON con los datos de un nuevo juego:
+### ✅ Crear Juego desde Swagger UI
+La documentación interactiva de Swagger UI permite probar fácilmente el endpoint `POST /juegos`. Al enviar un JSON con los datos de un nuevo juego, la API lo registra correctamente en la base de datos.
 
-![Vista de Swagger UI](img/2.jpg)
-![Creación del juego recién insertado](img/2.1.jpg)
+![Vista de Swagger UI con el formulario POST /juegos](img/2.jpg)
+![Respuesta exitosa de Swagger UI tras la creación de un juego](img/2.1.jpg)
 
-### 🔍 Buscar juego por nombre
-Al pasar el parámetro `nombre=Catan` a `GET /juegos/buscar?nombre=Catan`, obtenemos solo los juegos cuyo nombre coincide:
+### ❌ Validación de Datos en Acción
+Para demostrar la robusta validación de entrada implementada en la API (mediante Pydantic y validadores personalizados), un intento de crear un juego con campos obligatorios vacíos o inválidos resultará en un error HTTP 422 (Unprocessable Entity), indicando los problemas de validación.
 
-![Respuesta filtrada por nombre, con un único registro que coincide con “Catan"](img/5.jpg)
+![Error 422 Unprocessable Entity por validación de datos en Swagger UI](img/6.jpg)
 
-#### 📋 Listar todos los juegos  
-Para ver el catálogo completo, ejecutamos `GET /juegos` desde Swagger UI o cualquier cliente HTTP. La respuesta incluye todos los registros existentes:
+### 📋 Listar Todos los Juegos
+El endpoint `GET /juegos` permite obtener un listado completo de todos los juegos de mesa registrados en el sistema.
 
 ![Listado completo de juegos desde Swagger UI mostrando múltiples entradas](img/4.jpg)
 
-### 🩺 Health‐check de MariaDB
-En producción, el `healthcheck` de MariaDB nos indica el estado “healthy” al ejecutar `docker compose ps`:
+### 🔍 Buscar Juego por Nombre
+El endpoint `GET /juegos/buscar` con un parámetro de consulta (`nombre=...`) permite filtrar el catálogo de juegos. En el ejemplo, al buscar "Catan", solo se retorna el juego que coincide.
+
+![Respuesta filtrada por nombre, con un único registro que coincide con “Catan"](img/5.jpg)
+
+### 🩺 Health-check de MariaDB en Producción
+En un entorno de producción, la configuración de Docker Compose incluye un `healthcheck` para la base de datos MariaDB. Esto asegura que la API solo se inicie una vez que la base de datos esté completamente operativa y saludable. El comando `docker compose ps` refleja este estado.
 
 ![docker-compose ps mostrando contenedor juegos-db healthy](img/7.jpg)
 
-### 📂 Verificar registros desde MariaDB
-Podemos comprobar manualmente los registros accediendo al contenedor y consultando la tabla `juegos`:
+### 📂 Verificación Directa de Registros en MariaDB
+Para confirmar la persistencia y correcta inserción de los datos, es posible acceder directamente a la consola del contenedor de MariaDB y realizar consultas SQL, como se muestra a continuación.
 
 ![MariaDB CLI dentro del contenedor mostrando resultados de SELECT * FROM juegos](img/8.jpg)
 ---
+
 
 ## 👤 Autoría
 - Ana Belén Ballesteros 
