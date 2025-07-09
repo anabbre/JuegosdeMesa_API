@@ -13,32 +13,34 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-#Intentar conectar varias veces antes de rendirse
+#Reintento de conexión a la Base de Datos
 MAX_RETRIES = 10
-RETRY_WAIT = 2  #segundos
+RETRY_WAIT = 2  #segundos entre intentos
 
 for attempt in range(1, MAX_RETRIES + 1):
     try:
         engine.connect()
         logger.info("✅ Conexión a la base de datos exitosa.")
         break
-    except OperationalError as e:
+    except OperationalError as e: #Captura errores específicos de conexión
         logger.error(f"Error al conectar a la BD (intento {attempt}): {e}")
         time.sleep(RETRY_WAIT)
 else:
-    logger.critical("❌ No se pudo conectar a la base de datos después de varios intentos.")
+    logger.critical("❌ No se pudo conectar a la base de datos después de varios intentos.") #Si todos los intentos fallan, la aplicación no puede iniciarse sin BD
     raise SystemExit(1)
 
 
-#Crear las tablas
+#Cración de las tablas de BD definidas en 'models.py'
 Base.metadata.create_all(bind=engine)
 
+#Inicialización de la aplicación FastAPI
 app = FastAPI(
     title="API CRUD Juegos de Mesa",
     description="API RESTful para la gestión de un catálogo de juegos de mesa. Permite realizar operaciones CRUD (Crear, Leer, Actualizar, Eliminar) de información detallada sobre juegos, incluyendo su nombre, año de lanzamiento, categoría y número de jugadores.",
     version="2.0."
 )
 
+#Middleware de Logging de peticiones que registra todas las peticiones y respuestas HTTP
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     start_time = datetime.datetime.utcnow()

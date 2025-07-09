@@ -1,4 +1,4 @@
-# docker-compose.prod.yml
+#Configuración de Producción de Docker-Compose
 version: '3.8'
 
 services:
@@ -11,7 +11,7 @@ services:
       retries: 5
 
   api:
-    #hereda base.api, deshabilita los mounts (la imagen ya incluye el código)
+    #hereda base.api
     volumes: []
     #expone el puerto en prod también
     ports:

@@ -1,5 +1,6 @@
 version: '3.8'
 
+#Definición de servicios (Contenedores)
 services:
   db:
     image: mariadb:10.5
@@ -9,24 +10,27 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
     volumes:
-      - juegos-data:/var/lib/mysql
+      - juegos-data:/var/lib/mysql #Monta un volumen persistente para los datos de la base de datos
     networks:
-      - juegos-net
+      - juegos-net #conecta la base de datos a una red compartida con la API 
 
+#Servicio 'api': Contenedor de la aplicación FastAPI
   api:
     build:
-      context: ./docker       # <— apunta a la carpeta con tu Dockerfile
+      context: ./docker       
       dockerfile: Dockerfile
     container_name: juegosmesa_api
     env_file:
-      - .env
+      - .env #Carga variables de entorno (como DATABASE_URL) desde un archivo .evn
     depends_on:
-      - db
+      - db #Asegura que el servicio 'db' se incie antes que 'api'
     networks:
       - juegos-net
 
+#Definición de volumenes para persistir los datos de MariaDB
 volumes:
   juegos-data:
 
+#Definición de redes personalizadas
 networks:
   juegos-net:

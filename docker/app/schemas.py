@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, validator 
 
-#Base para crear un juego (POST)
+#Base para crear/actualizar un juego (POST)
 class JuegoCreate(BaseModel):
     nombre: str = Field(
         ...,
@@ -23,7 +23,8 @@ class JuegoCreate(BaseModel):
         description="Número o rango de jugadores (ej. “2–4”)"
     )
 
-    @validator("nombre")
+    #Validador adicional para el campo 'nombre' que asegurá que no esté vacío o compuesto sólo de espacios en blanco
+    @validator("nombre") 
     def validar_nombre(cls, v):
         if not v.strip():
             raise ValueError("Campo obligatorio: debes indicar un nombre")

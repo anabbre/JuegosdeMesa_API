@@ -1,14 +1,14 @@
-# Entornos virtuales
+#Entornos virtuales
 venv/
 .env
 
-# Caché y bytecode
+#Caché y bytecode
 __pycache__/
 *.pyc
 
-# Git
+#Git
 .git
 .gitignore
 
-# VSCode
+#VSCode
 .vscode/

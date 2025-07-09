@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from .database import Base
 
-#Definición del modelo que representa la tabla
+#Definición del modelo ORM que representa la tabla 'juegos'
 class Juego(Base):
     __tablename__ = "juegos"
 
