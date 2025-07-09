@@ -158,7 +158,6 @@ Ambos contenedores comparten la red `juegos-net` (definida en `docker-compose.ba
   ```
   Se espera una respuesta con error de validación (422 Unprocessable Entity), indicando que los campos no pueden ser cadenas vacías o tener una longitud mínima.
 
-![Error 422](img/6.jpg)
 ---
 
 
