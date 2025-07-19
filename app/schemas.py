@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field, validator 
+from pydantic import BaseModel, Field, validator
 
-#Base para crear/actualizar un juego (POST)
 class JuegoCreate(BaseModel):
     nombre: str = Field(
         ...,
@@ -20,21 +19,18 @@ class JuegoCreate(BaseModel):
     jugadores: str = Field(
         ...,
         min_length=1,
-        description="Número o rango de jugadores (ej. “2–4”)"
+        description="Número o rango de jugadores (ej. “2-4”)"
     )
 
-    #Validador adicional para el campo 'nombre' que asegurá que no esté vacío o compuesto sólo de espacios en blanco
-    @validator("nombre") 
+    @validator("nombre")
     def validar_nombre(cls, v):
         if not v.strip():
             raise ValueError("Campo obligatorio: debes indicar un nombre")
         return v
 
-
-
-#Respuesta al obtener un juego (ID generado)
 class Juego(JuegoCreate):
     id: int
 
-    class Config:
-        orm_mode = True #Permite a FastAPI convertir modelos SQLAlchemy en JSON 
+    model_config = {
+        "from_attributes": True
+    }

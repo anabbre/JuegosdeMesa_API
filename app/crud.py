@@ -15,6 +15,11 @@ def buscar_juego_por_nombre(db: Session, nombre: str):
 
 #Crear un nuevo juego
 def create_juego(db: Session, juego: schemas.JuegoCreate):
+    # Primero, verificar si ya existe un juego con ese nombre
+    existing_juego = db.query(models.Juego).filter(models.Juego.nombre == juego.nombre).first()
+    if existing_juego:
+        return None # Indica que el juego ya existe, lo manejaremos en el endpoint
+
     nuevo_juego = models.Juego(**juego.dict())
     db.add(nuevo_juego)
     db.commit()

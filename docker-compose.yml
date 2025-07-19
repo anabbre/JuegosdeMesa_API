@@ -1,0 +1,46 @@
+# Servicio 'db': Contenedor de la base de datos MariaDB
+services:
+  db:
+    image: mariadb:10.5
+    container_name: juegos-db
+    restart: always # Asegura que el servicio se reinicie si falla o al arrancar Docker
+    environment:
+      MYSQL_ROOT_PASSWORD: anabelen
+      MYSQL_DATABASE: juegos
+    volumes:
+      - juegos-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - juegos-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -panabelen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Servicio 'api': Contenedor de la aplicación FastAPI
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: juegomesa-api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://root:anabelen@db:3306/juegos
+    ports:
+      - "8080:8080"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+    networks:
+      - juegos-net
+
+# Definición de volúmenes persistentes
+volumes:
+  juegos-data:
+
+# Definición de redes personalizadas
+networks:
+  juegos-net:

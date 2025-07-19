@@ -1,6 +1,7 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.ext.declarative import declarative_base
 
 #Configuración de la URL de conexión de la Base de Datos 
 #Si DATABASE_URL está definida en el entorno (por ejemplo MySQL en Docker), la usaremos. En caso contrario, arrancamos con SQLite local: un archivo juegos.db en el directorio actual

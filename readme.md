@@ -7,24 +7,24 @@ Proyecto realizado con **FastAPI**, **MariaDB** y **Docker Compose**. Esta API p
 - Python 3.10 (imagen `slim` optimizada)
 - FastAPI
 - SQLAlchemy
-- MariaDB 10.6
+- MariaDB 10.5 
 - Docker / Docker Compose
 - Uvicorn
 - PyMySQL
-- Python-dotenv (para la gestión de variables de entorno)
 
 ---
 
 ## 🧠 ¿Qué Hace Esta API?
 
-- Permite registrar nuevos juegos de mesa con nombre, año, categoría y número de jugadores, incluyendo **validación de entrada estricta** para asegurar la calidad de los datos.
+- Permite registrar nuevos juegos de mesa con nombre, año, categoría y número de jugadores, incluyendo **validación de entrada estricta** para asegurar la calidad de los datos (min_length, validación de espacios vacíos, etc.).
 - Permite listar todos los juegos registrados.
 - Permite obtener un juego por su `id`.
 - Permite buscar por nombre de juego (GET con query param).
 - Permite eliminar juegos por `id`.
-- Incluye una lógica de **reintento de conexión a la base de datos** configurable si aún no está disponible.
-- Incorpora un **sistema de logging avanzado** para la trazabilidad de la aplicación, incluyendo logs de conexión a la base de datos y un middleware para registrar todas las peticiones y respuestas HTTP.
-- Es **completamente configurable** mediante variables de entorno para la conexión a la base de datos, facilitando su despliegue en diferentes entornos (desarrollo, producción, etc.).
+- Implementa **control de errores HTTP**, devolviendo `HTTP 404 Not Found` para recursos no encontrados y `HTTP 400 Bad Request` para datos de entrada inválidos.
+- Incluye una lógica de **reintento de conexión a la base de datos** configurable al inicio de la aplicación, mejorando su resiliencia.
+- Incorpora un **sistema de logging avanzado** para la trazabilidad de la aplicación, incluyendo logs de conexión a la base de datos y un middleware HTTP personalizado para registrar todas las peticiones y respuestas.
+- Es **completamente configurable** mediante variables de entorno definidas directamente en `docker-compose.yml` facilitando su despliegue.
 
 ---
 
@@ -32,92 +32,66 @@ Proyecto realizado con **FastAPI**, **MariaDB** y **Docker Compose**. Esta API p
 
 ```text
 JuegosMesa_API/
-├── .env                  # Archivo para variables de entorno (¡nuevo!)
-├── app/                  # Aquí ya no está el código principal, ahora en ./docker/app
-├── docker/               # Configuración Docker y código principal 
-│   ├── app/              # Código fuente de la API (¡movido aquí!)
-│   │   ├── main.py       # Entrypoint de la API, configuración de logging y middleware
-│   │   ├── crud.py       # Lógica CRUD
-│   │   ├── database.py   # Configuración de conexión a MariaDB (lee de variables de entorno)
-│   │   ├── models.py     # Modelo SQLAlchemy
-│   │   └── schemas.py    # Validación con Pydantic (con min_length y validators)
-│   ├── Dockerfile        # Imagen personalizada y optimizada para FastAPI (¡movido aquí!)
-│   └── requirements.txt  # Dependencias (¡movido aquí!)
-├── docker-compose.base.yml # Orquestación base de servicios y red entre contenedores 
-├── docker-compose.dev.yml  # Configuración para desarrollo (¡nuevo!)
-├── docker-compose.prod.yml # Configuración para producción (¡nuevo!)
-├── mejoras.md            # Documento explicando las mejoras implementadas después de una primera versión
+├── app/                  # Código fuente de la API
+│   ├── __init__.py
+│   ├── crud.py           # Lógica CRUD (crear, leer, actualizar, eliminar)
+│   ├── database.py       # Configuración de conexión a la base de datos (MariaDB o SQLite)
+│   ├── main.py           # Entrypoint de la API, configuración de logging, middleware y endpoints
+│   ├── models.py         # Definición del modelo ORM (Juego)
+│   └── schemas.py        # Esquemas de datos Pydantic (con validaciones reforzadas)
+├── .dockerignore         # Archivo para ignorar en la construcción de la imagen Docker
+├── .gitignore            # Archivo para ignorar en el control de versiones de Git
+├── docker-compose.yml    # Orquestación de servicios (API y Base de Datos)
+├── Dockerfile            # Imagen personalizada y optimizada para la aplicación FastAPI
+├── mejoras.md            # Documento explicando las mejoras implementadas
 ├── README.md             # Este documento
+├── requirements.txt      # Dependencias de Python
+└── venv/                 # Entorno virtual de Python (ignorados por Git y Docker)
 ```
 
-El proyecto utiliza múltiples archivos docker-compose para diferentes entornos:
+El proyecto utiliza un archivo docker-compose.yml que orquesta dos contenedores principales:
 
-- **docker-compose.base.yml**: Define los servicios base (api y db), la red y los volúmenes compartidos.
-- **docker-compose.dev.yml**: Extiende la configuración base para un entorno de desarrollo (ej. con montajes de volúmenes para desarrollo en caliente).
-- **docker-compose.prod.yml**: Extiende la configuración base para un entorno de producción (ej. con healthchecks y sin montajes de código).
+- **juegomesa-api**: contenedor que ejecuta la API desarrollada en FastAPI. La imagen de este contenedor se construye automáticamente al ejecutar `docker-compose up --build`.
+- **juegos-db**: contenedor de base de datos `MariaDB`.
 
-Estos archivos orquestan dos contenedores principales:
+Ambos contenedores comparten la red `juegosmesa_api_juegos-net`(definida en `docker-compose.yml`), por lo que la API puede resolver la base de datos simplemente usando el nombre de servicio `db` como host. Además, el contenedor `juegos-db` utiliza un volumen persistente (`juegosmesa_api_juegos-data`) para asegurar que los datos de la base de datos no se pierdan. El servicio `juegomesa-api` tiene una dependencia del `healthcheck` de `juegos-db` para asegurar un inicio correcto.
 
-- **juegosmesa_api**: contenedor que ejecuta la API desarrollada en FastAPI.
-- **juegos-db**: contenedor de base de datos MariaDB.
-
-Ambos contenedores comparten la red `juegos-net` (definida en `docker-compose.base.yml`), por lo que la API puede resolver la base de datos simplemente usando el host `juegos-db`.
-
-![Salida de `docker ps` con contenedores juegosmesa_api y juegos-db levantados](img/1.jpg)
 ---
 
 ## 🚀 Cómo ejecutar el proyecto
 
-1. **Configuración de Variables de Entorno**:
+1. **Clonar el Repositorio**:
 
-   Crea un archivo llamado `.env` en la raíz de tu proyecto (al mismo nivel que `docker-compose.base.yml`). Este archivo contendrá las credenciales de tu base de datos y la URL de conexión de la API.
-
-   ```bash
-   MYSQL_ROOT_PASSWORD=your_secure_password
-   MYSQL_DATABASE=juegos
-   DATABASE_URL=mysql+pymysql://root:your_secure_password@juegos-db/juegos
-   # Para SQLite local (solo para desarrollo/pruebas si no usas Docker DB):
-   # DATABASE_URL=sqlite:///./juegos.db
-   ```
-
-   Asegúrate de reemplazar `your_secure_password` con una contraseña fuerte.
-
-2. **Clonar el Repositorio**:
-
-   ```bash
+```bash
    git clone https://github.com/anabbre/JuegosdeMesa_API
    cd JuegosMesa_API
    ```
 
-3. **Levanta los contenedores (Entorno de Desarrollo)**:
+2. **Levanta los contenedores (Entorno de Desarrollo)**:
 
-   Para levantar la API y la base de datos en un entorno de desarrollo:
+Para construir las imágenes y levantar la API junto con la base de datos, ejecuta el siguiente comando en la raíz del proyecto:
+
    ```bash
-   docker compose -f docker-compose.base.yml -f docker-compose.dev.yml up --build
-   ```
-  ![Salida de `docker.ps` mostrando los contenedores `juegosmesa_api` y `juegos-db` corriendo correctamente ](img/1.jpg)
-
-   El `docker-compose.dev.yml` montará tu código localmente, permitiendo cambios en vivo si usas un recargador (como el de Uvicorn).
-
-4. **Levanta los contenedores (Entorno de Producción)**:
-
-   Para levantar la API y la base de datos en un entorno de producción (la imagen de la API ya contendrá el código):
-   ```bash
-   docker compose -f docker-compose.base.yml -f docker-compose.prod.yml up --build
+   docker compose up --build
    ```
 
-5. **Accede a la documentación automática de la API**:
+Verás en la terminal la salida de los contenedores MariaDB y FastAPI, indicando su inicialización y conexión:
+
+3. **Accede a la documentación automática de la API**:
+
+Una vez que los contenedores estén corriendo, puedes acceder a la documentación interactiva de la API:
 
    - Swagger UI: http://localhost:8080/docs
    - Redoc: http://localhost:8080/redoc
 
-6. **Accede al contenedor de base de datos y consulta**:
+4. **Accede al contenedor de base de datos y consulta (opcional)**:
 
-   Para interactuar directamente con la base de datos MariaDB dentro de su contenedor:
+Para interactuar directamente con la base de datos MariaDB dentro de su contenedor:
 
    ```bash
    docker exec -it juegos-db bash
-   mariadb -u root -p # Te pedirá la contraseña definida en .env
+   mariadb -u root -p #Te pedirá la contraseña definida en docker-compose.yml (MYSQL_ROOT_PASSWORD)
+   USE juegos;
    USE juegos;
    SELECT * FROM juegos;
    ```
@@ -126,71 +100,89 @@ Ambos contenedores comparten la red `juegos-net` (definida en `docker-compose.ba
 
 ## 📂 Endpoints disponibles
 
-| Método | Ruta                         | Descripción                     |
-| ------ | ---------------------------- | ------------------------------- |
-| POST   | `/juegos`                    | Crear un nuevo juego            |
-| GET    | `/juegos`                    | Obtener todos los juegos        |
-| GET    | `/juegos/{id}`               | Obtener juego por `id`          |
-| GET    | `/juegos/buscar?nombre=<str>`| Buscar juegos por nombre        |
-| DELETE | `/juegos/{id}`               | Eliminar juego por `id`         |
+| Método | Ruta           | Descripción | Código Éxito | Códigos Error Posibles |
+| :----- | :--------------------------- | :-------------------------------- | :----------- | :---------------------- |
+| POST   | `/juegos`      | Crear un nuevo juego | `201 Created` | `400 Bad Request`, `422 Unprocessable Entity` |
+| GET    | `/juegos`      | Obtener todos los juegos | `200 OK` | - |
+| GET    | `/juegos/{id}` | Obtener juego por `id` | `200 OK` | `404 Not Found` |
+| GET    | `/juegos/buscar?nombre=<str>` | Buscar juegos por nombre (parcial) | `200 OK` | `404 Not Found` (si no hay coincidencias) |
+| DELETE | `/juegos/{id}` | Eliminar juego por `id` | `200 OK` | `404 Not Found` |
 
 ---
 
-## 🧪 Pruebas en Swagger
+## 📊 Ejemplos Visuales y Pruebas Detalladas
 
-- Ejemplo de JSON para registrar un juego:
-  ```json
-  {
-    "nombre": "Dixit",
-    "anio": 2008,
-    "categoria": "Creatividad",
-    "jugadores": "3-6"
-  }
-  ```
-- Intento de crear juego con campos vacíos (nombre, categoría, jugadores):
-  ```json
-  {
-    "nombre": "",
-    "anio": 2023,
-    "categoria": "",
-    "jugadores": ""
-  }
-  ```
-  Se espera una respuesta con error de validación (422 Unprocessable Entity), indicando que los campos no pueden ser cadenas vacías o tener una longitud mínima.
-
----
-
-
-## 📊 Ejemplos Visuales
+La API proporciona una interfaz interactiva de Swagger UI (`http://localhost:8080/docs`) para probar todos los endpoints y visualizar su comportamiento, incluyendo la gestión de errores.
+![Logs mostrando "✅ Conexión a la base de datos exitosa." y Uvicorn corriendo](img/2.jpg)
 
 ### 🚀 Arranque y Logging de la API
 Al iniciar los servicios con Docker Compose, la API muestra en sus logs la confirmación de la conexión exitosa a la base de datos MariaDB y el inicio del servidor Uvicorn. Esto demuestra la robustez de la conexión y la disponibilidad de la API.
 
 ![Logs mostrando "✅ Conexión a la base de datos exitosa." y Uvicorn corriendo](img/3.jpg)
 
-### ✅ Crear Juego desde Swagger UI
-La documentación interactiva de Swagger UI permite probar fácilmente el endpoint `POST /juegos`. Al enviar un JSON con los datos de un nuevo juego, la API lo registra correctamente en la base de datos.
+### ✅ Creación Exitosa de un Juego (POST /juegos)
+La documentación interactiva de Swagger UI permite probar fácilmente el endpoint `POST /juegos`. Al enviar un JSON con los datos de un nuevo juego, la API lo registra correctamente en la base de datos y responde con el código de estado `201 Created`.
+* **Ejemplo de JSON para registrar un juego:**
+    ```json
+    {
+      "nombre": "Dixit",
+      "anio": 2008,
+      "categoria": "Creatividad",
+      "jugadores": "3-6"
+    }
+    ```
+* **Respuesta esperada:** `201 Created` con el objeto del juego recién creado.
+   ![Respuesta exitosa de Swagger UI tras la creación de un juego](img/2.1.jpg)
 
-![Vista de Swagger UI con el formulario POST /juegos](img/2.jpg)
-![Respuesta exitosa de Swagger UI tras la creación de un juego](img/2.1.jpg)
+### ❌ Manejo de Errores al Crear Juegos
 
-### ❌ Validación de Datos en Acción
-Para demostrar la robusta validación de entrada implementada en la API (mediante Pydantic y validadores personalizados), un intento de crear un juego con campos obligatorios vacíos o inválidos resultará en un error HTTP 422 (Unprocessable Entity), indicando los problemas de validación.
+La API implementa una robusta validación de entrada y manejo de errores para el endpoint `POST /juegos`.
+* **Validación de Datos (422 Unprocessable Entity):**
+    Un intento de crear un juego con campos obligatorios vacíos o inválidos (ej., `min_length=1` o campos con solo espacios en blanco) resultará en un error HTTP `422 Unprocessable Entity`, indicando los problemas de validación específicos.
+    ```json
+    {
+      "nombre": "",
+      "anio": 2023,
+      "categoria": "",
+      "jugadores": ""
+    }
+    ```
+    * **Respuesta esperada:** `422 Unprocessable Entity`.
 
-![Error 422 Unprocessable Entity por validación de datos en Swagger UI](img/6.jpg)
+    ![Error 422 Unprocessable Entity por validación de datos en Swagger UI](img/2.2.jpg)
 
-### 📋 Listar Todos los Juegos
-El endpoint `GET /juegos` permite obtener un listado completo de todos los juegos de mesa registrados en el sistema.
+* **Nombre de Juego Duplicado (400 Bad Request):**
+    Si se intenta crear un juego con un `nombre` que ya existe en la base de datos (debido a la restricción de unicidad), la API devolverá un `400 Bad Request` con un mensaje descriptivo.
 
-![Listado completo de juegos desde Swagger UI mostrando múltiples entradas](img/4.jpg)
+    * **Respuesta esperada:** `400 Bad Request` con detalle "Ya existe un juego con este nombre.".
 
-### 🔍 Buscar Juego por Nombre
-El endpoint `GET /juegos/buscar` con un parámetro de consulta (`nombre=...`) permite filtrar el catálogo de juegos. En el ejemplo, al buscar "Catan", solo se retorna el juego que coincide.
+    ![Error 400 Bad Request porque el juego ya existe en la db](img/2.5.jpg)
 
-![Respuesta filtrada por nombre, con un único registro que coincide con “Catan"](img/5.jpg)
+### 🔄 Búsqueda y Recuperación de Juegos
+
+* **Listar Todos los Juegos (GET /juegos):**
+    El endpoint `GET /juegos` permite obtener un listado completo de todos los juegos de mesa registrados en el sistema.
+
+   ![Listado completo de juegos desde Swagger UI mostrando múltiples entradas](img/4.jpg)
+
+* **Buscar Juego por Nombre (GET /juegos/buscar?nombre=<str>):**
+    El endpoint `GET /juegos/buscar` con un parámetro de consulta (`nombre=...`) permite filtrar el catálogo de juegos. En el ejemplo, al buscar "Catan", solo se retorna el juego que coincide. Si no se encuentran coincidencias, la API devolverá un `404 Not Found`.
+
+   ![Respuesta filtrada por nombre, con un único registro que coincide con “Catan"](img/5.jpg)
+
+### 🗑 Eliminación de Juegos y Errores de Recurso No Encontrado
+
+* **Eliminar Juego por ID (DELETE /juegos/{id}):**
+    Permite eliminar un juego específico por su identificador único.
+
+* **Recurso No Encontrado (404 Not Found - GET /juegos/{id} o DELETE /juegos/{id}):**
+    Al intentar obtener o eliminar un juego con un `id` que no existe en la base de datos, la API responderá con un `404 Not Found`.
+
+   ![alt text](img/2.4.jpg)
+---
 
 ### 🩺 Health-check de MariaDB en Producción
-En un entorno de producción, la configuración de Docker Compose incluye un `healthcheck` para la base de datos MariaDB. Esto asegura que la API solo se inicie una vez que la base de datos esté completamente operativa y saludable. El comando `docker compose ps` refleja este estado.
+La configuración de Docker Compose incluye un `healthcheck` robusto para la base de datos MariaDB. Esto asegura que el servicio de la API solo se inicie una vez que la base de datos esté completamente operativa y saludable. El comando `docker compose ps` refleja este estado.
 
 ![docker-compose ps mostrando contenedor juegos-db healthy](img/7.jpg)
 

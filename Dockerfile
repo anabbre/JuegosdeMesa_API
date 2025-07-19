@@ -5,10 +5,6 @@ FROM python:3.10-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \  
     PYTHONUNBUFFERED=1
 
-#Declaración de la variable de conexión
-ARG DATABASE_URL="sqlite:///./juegos.db"
-ENV DATABASE_URL=${DATABASE_URL}
-
 #Crear directorio de trabajo
 WORKDIR /app
 
@@ -19,7 +15,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 #Copiamos el resto del código
-COPY app ./app
+COPY . .
 
 #Exponer el puerto de la API
 EXPOSE 8080

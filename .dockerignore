@@ -1,6 +1,7 @@
-#Entornos virtuales
+#Entornos virtuales y ficheros de configuración local
 venv/
 .env
+*.db
 
 #Caché y bytecode
 __pycache__/
@@ -10,5 +11,7 @@ __pycache__/
 .git
 .gitignore
 
-#VSCode
+#VSCode y logs temporales
 .vscode/
+*.log
+*.swp

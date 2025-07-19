@@ -1,9 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException, Query, Request
+from fastapi import FastAPI, Depends, HTTPException, Query, Request, status
 import datetime
 import logging
 from sqlalchemy.orm import Session
 from app import crud, models, schemas, database
-from app.database import Base, engine
+from app.database import SessionLocal, Base, engine
 import time
 from sqlalchemy.exc import OperationalError
 
@@ -82,11 +82,12 @@ def obtener_juego(juego_id: int, db: Session = Depends(get_db)):
     return juego
 
 #Crear nuevo juego
-@app.post("/juegos", response_model=schemas.Juego)
-def crear_juego(juego: schemas.JuegoCreate, db: Session = Depends(get_db)):
-    if not juego.nombre:
-        raise HTTPException(status_code=400, detail="El nombre es obligatorio")
-    return crud.create_juego(db, juego)
+@app.post("/juegos", response_model=schemas.Juego, status_code=status.HTTP_201_CREATED) #
+async def crear_juego(juego: schemas.JuegoCreate, db: Session = Depends(get_db)):
+    db_juego = crud.create_juego(db, juego)
+    if db_juego is None: # Si create_juego devuelve None: el nombre ya existe
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ya existe un juego con este nombre.")
+    return db_juego
 
 #Eliminar juego por ID
 @app.delete("/juegos/{juego_id}", response_model=schemas.Juego)
